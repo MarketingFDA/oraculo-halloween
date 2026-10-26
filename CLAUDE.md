@@ -13,7 +13,7 @@ Página da campanha interna de Halloween (grupo Fradema): o colaborador informa 
 - 26/10/2026: cotas fechadas por filial, 70% DOCES / 30% TRAVESSURAS (Math.round), sorteio entre os brindes restantes. Lista de filiais e pessoas em `servidor/src/index.js` (FILIAIS_INICIAIS); depois de publicado, ajustar pelo painel admin (“Salvar quantidades”).
 - Identificação: janela com nome completo + filial antes da bruxa falar. Mesmo nome (sem acentos/maiúsculas) + mesma filial = mesmo resultado e código.
 - Painel admin (lua ☾) protegido por senha (segredo ADMIN_SENHA no Worker; cópia local em servidor/senha-admin.txt, fora do git).
-- Textos: "o seu gestor" (nunca "chefe da sua filial"); abertura "Olha só…" (nunca "Ora, ora"). Voz padrão Francisca.
+- Textos (26/10/2026): o cupom é apresentado à "pessoa designada da sua filial" ("se não souber quem é, pergunte ao seu gestor"); nunca "chefe da sua filial". Abertura "Olha só…" (nunca "Ora, ora"). Voz padrão Francisca. Falas regravadas com scripts/gen_designado.py.
 
 ## Arquivos
 - `index.html`: página publicada (áudios em base64). `oraculo-halloween.html` = mesmo conteúdo sem o invólucro <html>.
