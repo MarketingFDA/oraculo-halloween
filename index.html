@@ -426,7 +426,7 @@ select{width:100%;background:rgba(6,5,12,.7);color:var(--parch);border:1px solid
     <!-- entrada -->
     <section id="screen-enter" hidden>
       <div class="btn-row"><span class="btn-wrap pulse"><button class="btn" id="btn-enter" type="button">Entrar no reino</button></span></div>
-      <p class="fineprint">Toque para despertar a bruxa. Ela vai falar com você, então o som será ativado.</p>
+      <p class="fineprint">A bruxa vai falar com você: deixe o som do aparelho ligado. Para silenciar, toque no alto-falante no canto da tela.</p>
       <p class="fineprint">Uma única participação por colaborador.</p>
     </section>
 
@@ -710,6 +710,18 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     else{stopMusic();stopVoice();}
   }
   function toggleSound(){setSound(!audio.on);}
+  // O site abre com o som ligado. Os navegadores só deixam tocar depois do primeiro
+  // toque, clique ou tecla da pessoa, então a trilha começa nesse primeiro gesto.
+  function soundOnByDefault(){
+    setSound(true);
+    var evs=["pointerdown","touchstart","keydown"];
+    function unlock(e){
+      if(e&&e.target&&e.target.closest&&e.target.closest("#sound-btn"))return;
+      evs.forEach(function(n){removeEventListener(n,unlock,true);});
+      if(audio.on){try{audio.ctx&&audio.ctx.resume();}catch(err){}startMusic();}
+    }
+    evs.forEach(function(n){addEventListener(n,unlock,true);});
+  }
 
   /* ---------- voz da bruxa: feminina, grave, fluida ---------- */
   var MALE=/daniel|ant[oô]nio|f[áa]bio|humberto|j[úu]lio|nicolau|donato|val[ée]rio|ricardo|felipe|thiago|tiago|leonardo|bruno|rafael|paulo|male|masculin|homem/i;
@@ -894,7 +906,7 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
   }
 
   async function init(){
-    decorateFrames();startFX();startParallax();updateSoundBtn();start();
+    decorateFrames();startFX();startParallax();soundOnByDefault();start();
   }
   // Uma participação por aparelho: quem já participou volta direto para "Você já participou".
   async function start(){
@@ -931,7 +943,7 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     var f=FILIAIS.filter(function(x){return x.id===filial;})[0];
     ident={nome:nome,filial:filial,filialNome:f?f.nome:""};store("oraculo_ident",JSON.stringify(ident));
     $("ident-overlay").hidden=true;
-    setSound(true);preloadClips();show("intro");playIntroLines();
+    if(audio.on)setSound(true);preloadClips();show("intro");playIntroLines();
   }
 
   function placeCardOrigin(){
