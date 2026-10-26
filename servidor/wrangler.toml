@@ -1,0 +1,12 @@
+name = "oraculo-halloween"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[[durable_objects.bindings]]
+name = "ORACULO"
+class_name = "Oraculo"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Oraculo"]

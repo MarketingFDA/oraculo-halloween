@@ -1,10 +1,27 @@
 # Oráculo do Halloween
 
-Página da campanha interna de Halloween do grupo Fradema. Uma bruxa conversa com o colaborador, sorteia **DOCES** ou **TRAVESSURAS** e gera um cupom para ele apresentar ao seu gestor.
+Página da campanha interna de Halloween do grupo Fradema. O colaborador informa nome e filial, a bruxa revela **DOCES** ou **TRAVESSURAS** e gera um cupom para ele apresentar ao seu gestor.
 
-- `index.html`: a página publicada no GitHub Pages.
-- `oraculo-halloween.html`: o arquivo-fonte da página, com os áudios embutidos em base64.
+- **Página:** https://marketingfda.github.io/oraculo-halloween/
+- `index.html`: a página publicada no GitHub Pages (áudios embutidos em base64).
+- `servidor/`: o servidor (Cloudflare Worker + Durable Object) que guarda as cotas e as participações.
 - `audio/`: as falas originais da bruxa (edge-tts, vozes Francisca e Thalita) e a gargalhada (CC0, OpenGameArt "witch cackle").
 - `scripts/`: os scripts que geram as vozes.
 
-O sorteio é 50/50, feito no navegador de cada pessoa. O controle de participações e o painel admin só funcionam na versão publicada como artefato do Claude.
+## Regras do sorteio
+
+- Cada filial tem uma cota fechada: 70% DOCES e 30% TRAVESSURAS do número de pessoas (arredondado).
+- O sorteio é aleatório entre os brindes que ainda restam na filial, então os totais saem exatos.
+- Uma participação por pessoa: o mesmo nome na mesma filial (sem diferenciar maiúsculas e acentos) recebe sempre o mesmo resultado e código.
+- Quando a cota da filial acaba, a página avisa que os brindes se esgotaram.
+
+## Painel admin
+
+A lua ☾ no canto da página abre os bastidores. Com a senha da organização, mostra os brindes por filial, a lista de participantes e permite ajustar o número de pessoas, remover uma participação, encerrar ou reativar a campanha e zerar tudo.
+
+## Atualizar o servidor
+
+```
+cd servidor
+npx wrangler deploy
+```

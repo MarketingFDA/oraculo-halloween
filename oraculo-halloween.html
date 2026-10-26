@@ -268,6 +268,20 @@ h2.head.gold{color:var(--gold-2);text-shadow:0 0 22px rgba(216,164,66,.35)}
 .toast.ok{background:rgba(95,230,195,.12);color:var(--teal)}
 .toast.err{background:rgba(224,102,42,.14);color:#f6a07a}
 label.field{display:block;font-family:var(--font-label);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:1rem 0 .35rem}
+input.text{width:100%;background:rgba(6,5,12,.7);color:var(--parch);border:1px solid rgba(216,164,66,.35);border-radius:2px;padding:.7rem;font-size:1.05rem;font-family:var(--font-body)}
+input.text:focus-visible,select:focus-visible{outline:2px solid var(--violet-2);outline-offset:1px}
+input.num{width:5.2em;background:rgba(6,5,12,.7);color:var(--parch);border:1px solid rgba(216,164,66,.35);border-radius:2px;padding:.35rem .4rem;font-size:1rem;font-family:var(--font-body);text-align:right}
+.ident .frame{max-width:440px;text-align:left}
+.ident .speech{min-height:0;font-size:clamp(1.05rem,2.6vw,1.25rem);max-width:none;margin:0 0 .2rem}
+.ident .btn-row{margin-top:1.2rem}
+.adm-table{width:100%;border-collapse:collapse;font-size:.95rem;margin-top:.4rem}
+.adm-table th{font-family:var(--font-label);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:400;text-align:right;padding:.35rem .3rem;border-bottom:1px solid rgba(216,164,66,.25)}
+.adm-table th:first-child,.adm-table td:first-child{text-align:left}
+.adm-table td{padding:.4rem .3rem;border-bottom:1px solid rgba(216,164,66,.12);text-align:right;font-variant-numeric:tabular-nums}
+.adm-table tr.sum td{color:var(--gold-2);font-weight:600;border-bottom:none}
+.adm-table .x{background:none;border:1px solid rgba(224,102,42,.5);color:#f6a07a;border-radius:2px;cursor:pointer;font-size:.75rem;padding:.15rem .45rem}
+.adm-scroll{max-height:320px;overflow:auto;margin-top:.3rem}
+.overlay .frame.wide{max-width:640px}
 select{width:100%;background:rgba(6,5,12,.7);color:var(--parch);border:1px solid rgba(216,164,66,.35);border-radius:2px;padding:.7rem;font-size:1rem;font-family:var(--font-body)}
 .close-x{background:none;border:none;color:var(--mute);font-size:1.7rem;cursor:pointer;line-height:1;padding:0 .2rem}
 .section-title{font-family:var(--font-label);font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin:1.3rem 0 .2rem}
@@ -470,10 +484,18 @@ select{width:100%;background:rgba(6,5,12,.7);color:var(--parch);border:1px solid
       <p class="fineprint">Volte quando a bruxa reabrir o seu reino.</p>
     </section>
 
+    <!-- cota da filial esgotada -->
+    <section id="screen-esgotada" class="frame" hidden>
+      <h2 class="head gold">Os brindes desta filial acabaram</h2>
+      <p class="speech">Todas as cartas de <em id="esgotada-filial">sua filial</em> já foram reveladas nesta noite.</p>
+      <p class="fineprint">Se você acha que isso é um engano, fale com a organização da campanha.</p>
+      <div class="btn-row"><span class="btn-wrap ghost"><button class="btn ghost" id="btn-esgotada-back" type="button">Voltar ao início</button></span></div>
+    </section>
+
     <!-- erro -->
     <section id="screen-error" class="frame" hidden>
       <h2 class="head gold">A névoa embaralhou as cartas</h2>
-      <p class="speech">Algo turvou a visão do oráculo. Tente novamente em instantes.</p>
+      <p class="speech" id="error-msg">Algo turvou a visão do oráculo. Tente novamente em instantes.</p>
       <div class="btn-row"><span class="btn-wrap"><button class="btn" id="btn-retry" type="button">Tentar novamente</button></span></div>
     </section>
 
@@ -487,8 +509,23 @@ select{width:100%;background:rgba(6,5,12,.7);color:var(--parch);border:1px solid
   <svg viewBox="0 0 24 24"><path d="M14 3a9 9 0 1 0 7 14.5A8 8 0 0 1 14 3z"/></svg>
 </button>
 
+<div class="overlay ident" id="ident-overlay" hidden>
+  <form class="frame" id="ident-form" role="dialog" aria-modal="true" aria-labelledby="ident-title" novalidate>
+    <p class="speaker">Antes de entrar</p>
+    <h2 class="head gold" id="ident-title" style="font-size:clamp(1.6rem,4.6vw,2.2rem)">Quem se aproxima?</h2>
+    <p class="speech">A bruxa precisa saber o seu nome e de qual filial você vem.</p>
+    <label class="field" for="ident-nome">Seu nome completo</label>
+    <input class="text" id="ident-nome" type="text" autocomplete="name" maxlength="60" required>
+    <label class="field" for="ident-filial">Sua filial</label>
+    <select id="ident-filial" required><option value="">Escolha a sua filial</option></select>
+    <p class="toast err" id="ident-msg" hidden></p>
+    <div class="btn-row"><span class="btn-wrap pulse"><button class="btn" id="ident-ok" type="submit">Despertar a bruxa</button></span></div>
+    <p class="fineprint">Uma única participação por colaborador. Use o mesmo nome se voltar depois.</p>
+  </form>
+</div>
+
 <div class="overlay" id="admin-overlay" hidden>
-  <div class="frame" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+  <div class="frame wide" role="dialog" aria-modal="true" aria-labelledby="admin-title">
     <div class="overlay-head">
       <h2 class="head gold" id="admin-title" style="font-size:1.7rem">Bastidores</h2>
       <button class="close-x" id="admin-close" type="button" aria-label="Fechar">×</button>
@@ -506,7 +543,7 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
 (function(){
   "use strict";
   var $=function(id){return document.getElementById(id);};
-  var SCREENS=["loading","enter","intro","reveal","result","coupon","already","closed","error"];
+  var SCREENS=["loading","enter","intro","reveal","result","coupon","already","esgotada","closed","error"];
   function show(name){
     SCREENS.forEach(function(s){var el=$("screen-"+s);if(el)el.hidden=(s!==name);});
     document.body.setAttribute("data-screen",name);
@@ -514,7 +551,7 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     if(cur){cur.classList.remove("fade-in");void cur.offsetWidth;cur.classList.add("fade-in");}
     var deck=$("deck");if(deck)deck.hidden=(name!=="reveal");
     var sub=$("subline");if(sub){sub.textContent=({enter:"A bruxa decide: doces ou travessuras",intro:"Ouça com atenção",reveal:"Não desvie o olhar",
-      result:"O destino foi selado",coupon:"Leve a prova do seu destino",already:"O destino já foi selado",closed:"O reino está fechado",error:"A visão turvou",loading:"Um instante"})[name]||"";}
+      result:"O destino foi selado",coupon:"Leve a prova do seu destino",already:"O destino já foi selado",esgotada:"As cartas se esgotaram",closed:"O reino está fechado",error:"A visão turvou",loading:"Um instante"})[name]||"";}
   }
   function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);return v;}catch(e){return null;}}
   function getBrowserId(){
@@ -797,50 +834,25 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     });
   }
 
-  /* ---------- dados (db) ---------- */
-  var DB=null,dbChecked=false;
-  var P_STATE="admin/campaign",P_COUNTER="sequence/counter",P_PART="participations/";
-  async function getDB(){if(dbChecked)return DB;dbChecked=true;
-    try{DB=window.claude?await window.claude.use("db"):null;}catch(e){DB=null;}return DB;}
-  var userNs=null,userChecked=false;
-  async function getUser(){if(userChecked)return userNs;userChecked=true;
-    try{userNs=window.claude?await window.claude.use("user"):null;}catch(e){userNs=null;}return userNs;}
-  function opp(r){return r==="DOCES"?"TRAVESSURAS":"DOCES";}
-
-  async function readCampaign(db){
-    try{var s=await db.doc(P_STATE).get();if(s.exists){var d=s.data()||{};
-      return{active:d.active!==false,startResult:d.startResult==="TRAVESSURAS"?"TRAVESSURAS":"DOCES"};}}catch(e){}
-    return{active:true,startResult:"DOCES"};
+  /* ---------- dados: servidor do oráculo (Cloudflare) ---------- */
+  // O servidor guarda as cotas de cada filial (70% DOCES, 30% TRAVESSURAS) e
+  // as participações; a página só pergunta e mostra o que ele decidir.
+  var API="https://oraculo-halloween.oraculo-fradema.workers.dev";
+  async function api(path,body){
+    var opt=body?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}:{};
+    var r=await fetch(API+path,opt);var data=null;try{data=await r.json();}catch(e){}
+    if(!r.ok){var err=new Error((data&&data.erro)||("http "+r.status));err.status=r.status;throw err;}
+    return data||{};
   }
-  async function recover(db,bid){try{var s=await db.doc(P_PART+bid).get();if(s.exists)return s.data();}catch(e){}return null;}
-
-  async function assignResult(db,bid){
-    var ex=await recover(db,bid);if(ex)return ex;
-    var camp=await readCampaign(db);if(!camp.active)return{closed:true};
-    var got=false,tries=0;
-    while(!got&&tries<12){tries++;var r;
-      try{r=await db.doc(P_COUNTER).acquire({holder:bid,ttlMs:8000});}catch(e){r={acquired:false};}
-      if(r&&r.acquired){got=true;break;}await sleep(260+Math.floor(Math.random()*340));}
-    if(!got)throw new Error("locked");
-    var again=await recover(db,bid);if(again)return again;
-    var lastSeq=0,lastResult=null;
-    try{var cs=await db.doc(P_COUNTER).get();if(cs.exists){var cd=cs.data()||{};lastSeq=cd.lastSequence||0;lastResult=cd.lastResult||null;}}catch(e){}
-    var nextSeq=lastSeq+1;
-    var result=(nextSeq===1)?camp.startResult:opp(lastResult||opp(camp.startResult));
-    var part={browserId:bid,result:result,sequenceNumber:nextSeq,couponCode:makeCode(nextSeq),createdAt:new Date().toISOString()};
-    await db.doc(P_PART+bid).set(part);
-    try{await db.doc(P_COUNTER).set({lastSequence:nextSeq,lastResult:result});}catch(e){}
-    return part;
-  }
-  // Público sem conta: sorteio 50/50 por navegador (o resultado varia entre as pessoas).
-  function localAssign(){
-    var ex=null;try{ex=JSON.parse(store("oraculo_local_part")||"null");}catch(e){}
-    if(ex)return ex;
-    var result=Math.random()<0.5?"DOCES":"TRAVESSURAS";
-    var seq=parseInt(store("oraculo_local_seq")||"0",10)+1;
-    var part={browserId:getBrowserId(),result:result,sequenceNumber:seq,couponCode:makeCode(seq),createdAt:new Date().toISOString(),local:true};
-    try{store("oraculo_local_part",JSON.stringify(part));store("oraculo_local_seq",String(seq));}catch(e){}
-    return part;
+  var FILIAIS=[],ident=null;
+  try{ident=JSON.parse(store("oraculo_ident")||"null");}catch(e){ident=null;}
+  async function loadEstado(){var d=await api("/api/estado");FILIAIS=d.filiais||[];return d;}
+  async function assignResult(){
+    var d=await api("/api/participar",{nome:ident.nome,filial:ident.filial,browserId:getBrowserId()});
+    if(d.encerrada)return{closed:true};
+    if(d.esgotada)return{esgotada:true,filialNome:d.filialNome};
+    return{result:d.resultado,couponCode:d.codigo,sequenceNumber:d.seq,createdAt:d.criadoEm,
+      nome:d.nome,filialNome:d.filialNome,repetida:!!d.repetida};
   }
 
   /* ---------- fluxo ---------- */
@@ -880,25 +892,33 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     decorateFrames();startFX();startParallax();updateSoundBtn();show("loading");
     // A página sempre recomeça do início: o espetáculo pode ser assistido quantas vezes se quiser.
     // A participação (resultado e código) continua única por navegador; a revelação repete o mesmo destino.
-    var db=await getDB();
-    if(db){
-      try{var camp=await readCampaign(db);
-        if(!camp.active){show("closed");subscribeCampaign(db);return;}}catch(e){}
-      subscribeCampaign(db);show("enter");return;
-    }
-    show("enter");
+    var est;
+    try{est=await loadEstado();}catch(e){showError("Não consegui falar com o oráculo. Verifique a sua internet e tente novamente.");return;}
+    if(!est.ativa){show("closed");return;}
+    fillFiliais();show("enter");
   }
+  function showError(msg){var el=$("error-msg");if(el)el.textContent=msg||"Algo turvou a visão do oráculo. Tente novamente em instantes.";show("error");}
 
-  var campUnsub=null;
-  function subscribeCampaign(db){
-    if(campUnsub)return;
-    try{campUnsub=db.doc(P_STATE).onSnapshot(function(snap){
-      var active=true;if(snap.exists){var d=snap.data()||{};active=d.active!==false;}
-      if(!active&&!current&&(!$("screen-enter").hidden||!$("screen-intro").hidden))show("closed");
-    },function(){});}catch(e){}
+  /* ---------- janela de identificação ---------- */
+  function fillFiliais(){
+    var sel=$("ident-filial");if(!sel)return;
+    sel.innerHTML='<option value="">Escolha a sua filial</option>';
+    FILIAIS.forEach(function(f){var o=document.createElement("option");o.value=f.id;o.textContent=f.nome;sel.appendChild(o);});
+    if(ident){$("ident-nome").value=ident.nome||"";sel.value=ident.filial||"";}
   }
-
-  function onEnter(){setSound(true);preloadClips();show("intro");playIntroLines();}
+  function identMsg(t){var m=$("ident-msg");if(!m)return;m.textContent=t||"";m.hidden=!t;}
+  function onEnter(){identMsg("");$("ident-overlay").hidden=false;decorateFrames();
+    setTimeout(function(){var n=$("ident-nome");if(n&&!n.value)n.focus();},60);}
+  function onIdent(e){
+    e.preventDefault();
+    var nome=$("ident-nome").value.replace(/\s+/g," ").trim(),filial=$("ident-filial").value;
+    if(nome.length<2||nome.indexOf(" ")<0){identMsg("Escreva o seu nome e sobrenome.");$("ident-nome").focus();return;}
+    if(!filial){identMsg("Escolha a sua filial.");$("ident-filial").focus();return;}
+    var f=FILIAIS.filter(function(x){return x.id===filial;})[0];
+    ident={nome:nome,filial:filial,filialNome:f?f.nome:""};store("oraculo_ident",JSON.stringify(ident));
+    $("ident-overlay").hidden=true;
+    setSound(true);preloadClips();show("intro");playIntroLines();
+  }
 
   function placeCardOrigin(){
     var sc=$("scene"),card=$("reveal-card");if(!sc||!card)return;
@@ -910,10 +930,12 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     show("reveal");placeCardOrigin();
     var card=$("reveal-card");if(card){card.classList.remove("flipped","suspense");void card.offsetWidth;card.classList.add("rise");}
     sfx("reveal");speakSegs(REVEAL_LINE);
-    var started=Date.now(),bid=getBrowserId(),part=null,errored=false;
-    try{var db=await getDB();part=db?await assignResult(db,bid):localAssign();}catch(e){errored=true;}
-    if(errored){if(btn)btn.disabled=false;show("error");return;}
-    if(part&&part.closed){if(btn)btn.disabled=false;show("closed");return;}
+    var started=Date.now(),part=null,errored=false;
+    if(!ident){if(btn)btn.disabled=false;show("enter");onEnter();return;}
+    try{part=await assignResult();}catch(e){errored=true;}
+    if(errored){if(btn)btn.disabled=false;stopVoice();showError();return;}
+    if(part&&part.closed){if(btn)btn.disabled=false;stopVoice();show("closed");return;}
+    if(part&&part.esgotada){if(btn)btn.disabled=false;stopVoice();$("esgotada-filial").textContent=part.filialNome||"sua filial";show("esgotada");return;}
     var wait=(prefersReduced()?400:1500)-(Date.now()-started);if(wait>0)await sleep(wait);
     if(card){card.classList.remove("rise");card.classList.add("suspense");}
     await sleep(prefersReduced()?200:1300);
@@ -1015,8 +1037,12 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
       c.fillStyle="#f4d78a";c.font="700 56px 'Cinzel', monospace";c.fillText(part.couponCode,W/2,1208);
       var dt=new Date(part.createdAt||Date.now());
       var ds=pad(dt.getDate())+"/"+pad(dt.getMonth()+1)+"/"+dt.getFullYear()+"  "+pad(dt.getHours())+":"+pad(dt.getMinutes());
-      c.fillStyle="#cdbb95";c.font="26px 'Cormorant Garamond', serif";c.fillText("Emitido em "+ds,W/2,1290);
-      c.fillStyle="#a195b6";c.font="20px 'Cinzel', serif";c.fillText("Previsão nº "+(part.sequenceNumber||"—")+" do oráculo",W/2,1328);
+      c.fillStyle="#eee2c6";c.font="600 30px 'Cinzel', serif";
+      var who=(part.nome||"")+(part.filialNome?"  ·  "+part.filialNome:"");
+      while(c.measureText(who).width>800&&who.length>8)who=who.slice(0,-2);
+      c.fillText(who,W/2,1284);
+      c.fillStyle="#cdbb95";c.font="26px 'Cormorant Garamond', serif";c.fillText("Emitido em "+ds,W/2,1326);
+      c.fillStyle="#a195b6";c.font="20px 'Cinzel', serif";c.fillText("Previsão nº "+(part.sequenceNumber||"—")+" do oráculo",W/2,1362);
       c.fillStyle="#776b8e";c.font="20px 'Cormorant Garamond', serif";
       c.fillText("Este cupom é uma brincadeira de Halloween. A entrega segue as regras internas da campanha.",W/2,1410);
       try{couponDataUrl=cv.toDataURL("image/png");}catch(e){couponDataUrl=null;}
@@ -1026,8 +1052,9 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
   var couponThisSession=false;
   async function onGerarCupom(){
     if(!current)return;
-    if(!couponThisSession&&store("oraculo_coupon_done")==="1"){stopVoice();show("already");return;}
-    couponThisSession=true;store("oraculo_coupon_done","1");
+    var doneKey="oraculo_coupon_done_"+(current.couponCode||"");
+    if(!couponThisSession&&store(doneKey)==="1"){stopVoice();show("already");return;}
+    couponThisSession=true;store(doneKey,"1");
     show("coupon");$("coupon-img").removeAttribute("src");
     $("coupon-code-chip").textContent=current.couponCode||"";
     try{if(document.fonts){await Promise.all([document.fonts.load("92px 'Pirata One'"),document.fonts.load("600 24px 'Cinzel'"),document.fonts.load("italic 500 36px 'Cormorant Garamond'")]);await document.fonts.ready;}}catch(e){}
@@ -1041,6 +1068,12 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
       try{await dl.save({filename:fn,data:couponBlob});
         if(msg){msg.className="toast ok";msg.textContent="Cupom salvo. Você já pode imprimir a imagem pelo seu aparelho.";msg.hidden=false;}return;}
       catch(e){if(e&&e.code==="declined")return;dlFallback();return;}
+    }
+    if(couponBlob){
+      try{var href=URL.createObjectURL(couponBlob),a=document.createElement("a");a.href=href;a.download=fn;
+        document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(href);},4000);
+        if(msg){msg.className="toast ok";msg.textContent="Cupom baixado. Você já pode imprimir a imagem pelo seu aparelho.";msg.hidden=false;}return;}
+      catch(e){}
     }
     dlFallback();
   }
@@ -1060,59 +1093,70 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     $("voice-sel").onchange=function(){VOICE.tag=this.value;store("oraculo_voice_tag",this.value);stopVoice();preloadClips();};
     $("btn-voice-test").onclick=function(){if(!audio.on)setSound(true);stopVoice();speakSegs(INTRO_LINES[1]);};
   }
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function adminPass(v){try{if(v===undefined)return sessionStorage.getItem("oraculo_admin");if(v===null)sessionStorage.removeItem("oraculo_admin");else sessionStorage.setItem("oraculo_admin",v);}catch(e){}return null;}
   async function openAdmin(){
     var ov=$("admin-overlay");ov.hidden=false;decorateFrames();renderVoice();
-    var body=$("admin-body");body.innerHTML='<p class="section-title">Campanha</p><p class="muted">Carregando estado</p>';
-    var db=await getDB();var u=await getUser();var canEdit=false;
-    try{canEdit=u?await u.canEdit():false;}catch(e){canEdit=false;}
-    if(!db){body.innerHTML='<p class="section-title">Campanha</p><p class="muted">O painel precisa do banco compartilhado, que não está disponível nesta visualização. Entre com a conta Claude dona deste oráculo.</p>';return;}
-    renderAdmin(db,canEdit);
+    var pw=adminPass();if(pw)adminCall({acao:"ver"},pw);else renderLogin();
   }
-  async function renderAdmin(db,canEdit){
-    var camp=await readCampaign(db),seq=0;
-    try{var cs=await db.doc(P_COUNTER).get();if(cs.exists)seq=(cs.data()||{}).lastSequence||0;}catch(e){}
+  function renderLogin(err){
     var h=['<p class="section-title">Campanha</p>'];
-    h.push('<div class="statline"><span class="muted">Estado</span>'+(camp.active?'<span class="pill on">Ativa</span>':'<span class="pill off">Encerrada</span>')+'</div>');
-    h.push('<div class="statline"><span class="muted">Participações (logadas)</span><strong>'+seq+'</strong></div>');
-    h.push('<div class="statline"><span class="muted">Começa por</span><strong>'+camp.startResult+'</strong></div>');
-    if(!canEdit){h.push('<p class="toast err">Área restrita à pessoa responsável pela campanha. Entre com a conta Claude dona deste oráculo para gerenciar.</p>');
-      $("admin-body").innerHTML=h.join("");return;}
-    h.push('<label class="field" for="start-sel">Resultado inicial da sequência</label>');
-    h.push('<select id="start-sel"><option value="DOCES"'+(camp.startResult==="DOCES"?" selected":"")+'>DOCES</option><option value="TRAVESSURAS"'+(camp.startResult==="TRAVESSURAS"?" selected":"")+'>TRAVESSURAS</option></select>');
+    h.push('<form id="adm-login"><label class="field" for="adm-pw">Senha da organização</label>');
+    h.push('<input class="text" id="adm-pw" type="password" autocomplete="current-password">');
+    if(err)h.push('<p class="toast err">'+esc(err)+'</p>');
+    h.push('<div class="btn-row admin-small" style="justify-content:flex-start;margin-top:.8rem"><span class="btn-wrap"><button class="btn" type="submit">Entrar</button></span></div></form>');
+    $("admin-body").innerHTML=h.join("");
+    $("adm-login").onsubmit=function(e){e.preventDefault();adminCall({acao:"ver"},$("adm-pw").value);};
+  }
+  async function adminCall(body,pw,okMsg){
+    pw=pw||adminPass();body.senha=pw;
+    var d;
+    try{d=await api("/api/admin",body);}
+    catch(e){if(e.status===401){adminPass(null);renderLogin("Senha incorreta.");return;}
+      adminToast("Não consegui falar com o servidor. Tente de novo.",false);return;}
+    adminPass(pw);renderAdmin(d);if(okMsg)adminToast(okMsg,true);
+  }
+  function renderAdmin(d){
+    var h=['<p class="section-title">Campanha</p>'];
+    h.push('<div class="statline"><span class="muted">Estado</span>'+(d.ativa?'<span class="pill on">Ativa</span>':'<span class="pill off">Encerrada</span>')+'</div>');
+    h.push('<p class="section-title">Brindes por filial</p><div class="adm-scroll"><table class="adm-table"><thead><tr><th>Filial</th><th>Pessoas</th><th>Doces</th><th>Travessuras</th><th>Restam</th></tr></thead><tbody>');
+    var S={t:0,cd:0,ct:0,d:0,tr:0};
+    d.filiais.forEach(function(f){S.t+=f.total;S.cd+=f.cotaDoces;S.ct+=f.cotaTrav;S.d+=f.doces;S.tr+=f.trav;
+      var rest=Math.max(0,f.cotaDoces-f.doces)+Math.max(0,f.cotaTrav-f.trav);
+      h.push('<tr><td>'+esc(f.nome)+'</td><td><input class="num" type="number" min="0" max="5000" data-filial="'+esc(f.id)+'" value="'+f.total+'" aria-label="Pessoas em '+esc(f.nome)+'"></td>'+
+        '<td>'+f.doces+' / '+f.cotaDoces+'</td><td>'+f.trav+' / '+f.cotaTrav+'</td><td>'+rest+'</td></tr>');});
+    h.push('<tr class="sum"><td>Total</td><td>'+S.t+'</td><td>'+S.d+' / '+S.cd+'</td><td>'+S.tr+' / '+S.ct+'</td><td>'+(S.cd-S.d+S.ct-S.tr)+'</td></tr></tbody></table></div>');
+    h.push('<p class="fineprint" style="text-align:left;margin:.4rem 0 0;max-width:none">Doces e travessuras mostram “já saíram / cota”. A cota é 70% doces e 30% travessuras do número de pessoas.</p>');
+    h.push('<div class="btn-row admin-small" style="justify-content:flex-start;margin-top:.6rem"><span class="btn-wrap ghost"><button class="btn ghost" id="btn-qtd" type="button">Salvar quantidades</button></span></div>');
+    h.push('<p class="section-title">Participantes ('+d.participacoes.length+')</p>');
+    if(!d.participacoes.length)h.push('<p class="muted" style="margin:.3rem 0">Ninguém participou ainda.</p>');
+    else{h.push('<div class="adm-scroll"><table class="adm-table"><thead><tr><th>Nome</th><th>Filial</th><th>Resultado</th><th>Código</th><th></th></tr></thead><tbody>');
+      d.participacoes.slice().reverse().forEach(function(p){
+        h.push('<tr><td>'+esc(p.nome)+'</td><td>'+esc(p.filialNome)+'</td><td>'+esc(p.resultado)+'</td><td>'+esc(p.codigo)+'</td>'+
+          '<td><button class="x" type="button" data-chave="'+esc(p.chave)+'" data-nome="'+esc(p.nome)+'">remover</button></td></tr>');});
+      h.push('</tbody></table></div>');
+      h.push('<p class="fineprint" style="text-align:left;margin:.4rem 0 0;max-width:none">Remover devolve o brinde para a filial e deixa a pessoa participar de novo.</p>');}
     h.push('<div class="btn-row admin-small" style="margin-top:1rem;justify-content:flex-start">');
-    h.push(camp.active?'<span class="btn-wrap ghost"><button class="btn ghost" id="btn-toggle" type="button">Encerrar campanha</button></span>':'<span class="btn-wrap"><button class="btn" id="btn-toggle" type="button">Reativar campanha</button></span>');
-    h.push('<span class="btn-wrap ghost"><button class="btn ghost" id="btn-save-start" type="button">Salvar início</button></span></div>');
-    h.push('<div class="btn-row admin-small" style="margin-top:.6rem;justify-content:flex-start"><span class="btn-wrap ghost"><button class="btn ghost" id="btn-reset" type="button">Zerar participações (teste)</button></span></div>');
-    h.push('<p class="fineprint" style="text-align:left;margin:.4rem 0 0;max-width:none">Apaga todas as participações e o contador para testar do início. A página recarrega ao final.</p>');
+    h.push(d.ativa?'<span class="btn-wrap ghost"><button class="btn ghost" id="btn-toggle" type="button">Encerrar campanha</button></span>':'<span class="btn-wrap"><button class="btn" id="btn-toggle" type="button">Reativar campanha</button></span>');
+    h.push('<span class="btn-wrap ghost"><button class="btn ghost" id="btn-reset" type="button">Zerar participações (teste)</button></span>');
+    h.push('<span class="btn-wrap ghost"><button class="btn ghost" id="btn-logout" type="button">Sair</button></span></div>');
     h.push('<p class="toast ok" id="admin-toast" hidden></p>');
     $("admin-body").innerHTML=h.join("");
-    $("btn-save-start").onclick=async function(){await writeCampaign(db,{startResult:$("start-sel").value},"Resultado inicial salvo.");renderAdmin(db,canEdit);};
-    $("btn-toggle").onclick=async function(){
-      if(camp.active){if(!adminState.confirming){adminState.confirming=true;this.textContent="Confirmar encerramento?";return;}
-        adminState.confirming=false;await writeCampaign(db,{active:false},"Campanha encerrada. As previsões foram pausadas.");}
-      else{await writeCampaign(db,{active:true},"Campanha reativada. O oráculo voltou a prever.");}
-      renderAdmin(db,canEdit);};
-    $("btn-reset").onclick=async function(){
+    $("btn-qtd").onclick=function(){var t={};document.querySelectorAll("#admin-body input.num").forEach(function(i){t[i.getAttribute("data-filial")]=i.value;});
+      adminCall({acao:"quantidades",totais:t},null,"Quantidades salvas. As cotas foram recalculadas.");};
+    document.querySelectorAll("#admin-body button.x").forEach(function(b){b.onclick=function(){
+      if(b.getAttribute("data-ok")!=="1"){b.setAttribute("data-ok","1");b.textContent="confirmar?";return;}
+      adminCall({acao:"remover",chave:b.getAttribute("data-chave")},null,"Participação de "+b.getAttribute("data-nome")+" removida.");};});
+    $("btn-toggle").onclick=function(){
+      if(d.ativa){if(!adminState.confirming){adminState.confirming=true;this.textContent="Confirmar encerramento?";return;}
+        adminState.confirming=false;adminCall({acao:"encerrar"},null,"Campanha encerrada. As previsões foram pausadas.");}
+      else adminCall({acao:"reativar"},null,"Campanha reativada. O oráculo voltou a prever.");};
+    $("btn-reset").onclick=function(){
       if(!adminState.resetConfirm){adminState.resetConfirm=true;this.textContent="Confirmar: apagar tudo?";return;}
-      adminState.resetConfirm=false;await resetAll(db);};
-  }
-  async function resetAll(db){
-    try{
-      var snap=await db.collection("participations").get();
-      var dels=[];snap.docs.forEach(function(d){dels.push(db.doc(P_PART+d.id).delete());});
-      await Promise.all(dels);
-      try{await db.doc(P_COUNTER).delete();}catch(e){}
-      try{localStorage.removeItem("oraculo_local_part");localStorage.removeItem("oraculo_local_seq");localStorage.removeItem("oraculo_coupon_done");}catch(e){}
-      adminToast("Participações zeradas. Recarregando.",true);
-      setTimeout(function(){try{location.reload();}catch(e){}},1200);
-    }catch(e){adminToast("Não consegui zerar. Verifique sua permissão de administradora.",false);}
-  }
-  async function writeCampaign(db,patch,okMsg){
-    var cur=await readCampaign(db);
-    var merged={active:patch.active!==undefined?patch.active:cur.active,
-      startResult:patch.startResult!==undefined?patch.startResult:cur.startResult,updatedAt:new Date().toISOString()};
-    try{await db.doc(P_STATE).set(merged);adminToast(okMsg,true);}
-    catch(e){adminToast("Não foi possível salvar. Sua conta pode não ter permissão de administradora deste oráculo.",false);}
+      adminState.resetConfirm=false;
+      try{Object.keys(localStorage).forEach(function(k){if(k.indexOf("oraculo_coupon_done")===0)localStorage.removeItem(k);});}catch(e){}
+      adminCall({acao:"zerar"},null,"Participações zeradas. Todos os brindes voltaram para as filiais.");};
+    $("btn-logout").onclick=function(){adminPass(null);renderLogin();};
   }
   function adminToast(t,ok){var el=$("admin-toast");if(!el)return;el.className="toast "+(ok?"ok":"err");el.textContent=t;el.hidden=false;}
   function closeAdmin(){$("admin-overlay").hidden=true;adminState.confirming=false;adminState.resetConfirm=false;}
@@ -1125,7 +1169,10 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     $("btn-download").addEventListener("click",onDownload);
     $("btn-back").addEventListener("click",function(){show("result");});
     $("btn-already-back").addEventListener("click",function(){stopVoice();var b=$("btn-reveal");if(b)b.disabled=false;show("enter");});
-    $("btn-retry").addEventListener("click",function(){var b=$("btn-reveal");if(b)b.disabled=false;onReveal();});
+    $("btn-retry").addEventListener("click",function(){var b=$("btn-reveal");if(b)b.disabled=false;if(!FILIAIS.length)init();else onReveal();});
+    $("btn-esgotada-back").addEventListener("click",function(){stopVoice();show("enter");});
+    $("ident-form").addEventListener("submit",onIdent);
+    $("ident-overlay").addEventListener("click",function(e){if(e.target===this)this.hidden=true;});
     $("sound-btn").addEventListener("click",toggleSound);
     $("admin-dot").addEventListener("click",openAdmin);
     $("admin-close").addEventListener("click",closeAdmin);
