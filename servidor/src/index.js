@@ -44,6 +44,17 @@ function chaveNome(nome) {
 }
 function limparNome(nome) { return String(nome || "").replace(/\s+/g, " ").trim().slice(0, 60); }
 
+// Etiqueta aleatória que cada navegador guarda; liga o aparelho à participação.
+function idAparelho(id) {
+  return typeof id === "string" && /^[a-zA-Z0-9_.~:@+-]{8,100}$/.test(id) ? id : null;
+}
+
+// O que a página recebe (sem a etiqueta do aparelho).
+function publica(part, extra) {
+  const { aparelho, ...resto } = part;
+  return { ...resto, ...extra };
+}
+
 function gerarCodigo(seq) {
   const letras = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const bytes = crypto.getRandomValues(new Uint8Array(4));
@@ -105,6 +116,7 @@ export class Oraculo {
     const corpo = request.method === "POST" ? await request.json().catch(() => ({})) : {};
     if (url.pathname === "/api/estado") return this.estado();
     if (url.pathname === "/api/participar") return this.participar(corpo);
+    if (url.pathname === "/api/minha") return this.minha(corpo);
     if (url.pathname === "/api/admin") return this.admin(corpo);
     return json({ erro: "nao_encontrado" }, 404);
   }
@@ -114,16 +126,33 @@ export class Oraculo {
     return json({ ativa: cfg.ativa, filiais: cfg.filiais.map((f) => ({ id: f.id, nome: f.nome })) });
   }
 
+  // Participação já feita neste aparelho, se houver.
+  async doAparelho(aparelho) {
+    if (!aparelho) return null;
+    const chave = await this.storage.get("b:" + aparelho);
+    return chave ? (await this.storage.get(chave)) || null : null;
+  }
+
+  async minha(corpo) {
+    const part = await this.doAparelho(idAparelho(corpo.browserId));
+    return json(part ? { participacao: publica(part) } : { participacao: null });
+  }
+
   async participar(corpo) {
     const cfg = await this.config();
     const nome = limparNome(corpo.nome);
     const filial = cfg.filiais.find((f) => f.id === corpo.filial);
+    const aparelho = idAparelho(corpo.browserId);
     if (nome.length < 2) return json({ erro: "nome_invalido" }, 400);
     if (!filial) return json({ erro: "filial_invalida" }, 400);
 
+    // Um aparelho, uma participação: mesmo com outro nome, devolve a que já saiu.
+    const doAparelho = await this.doAparelho(aparelho);
+    if (doAparelho) return json(publica(doAparelho, { repetida: true, mesmoAparelho: true }));
+
     const chave = "p:" + filial.id + ":" + chaveNome(nome);
     const existente = await this.storage.get(chave);
-    if (existente) return json({ ...existente, repetida: true });
+    if (existente) return json(publica(existente, { repetida: true }));
     if (!cfg.ativa) return json({ encerrada: true });
 
     const usados = await this.usados(filial.id);
@@ -140,9 +169,12 @@ export class Oraculo {
       resultado: sorteioJusto(restDoces, restTrav),
       codigo: gerarCodigo(seq),
       criadoEm: new Date().toISOString(),
+      aparelho,
     };
-    await this.storage.put({ seq, [chave]: part });
-    return json(part);
+    const gravar = { seq, [chave]: part };
+    if (aparelho) gravar["b:" + aparelho] = chave;
+    await this.storage.put(gravar);
+    return json(publica(part));
   }
 
   async admin(corpo) {
@@ -159,9 +191,16 @@ export class Oraculo {
       }
       await this.storage.put("config", cfg);
     } else if (corpo.acao === "remover" && typeof corpo.chave === "string" && corpo.chave.startsWith("p:")) {
-      await this.storage.delete(corpo.chave);
+      // Libera também o aparelho, para a pessoa poder participar de novo.
+      const part = await this.storage.get(corpo.chave);
+      const apagar = [corpo.chave];
+      if (part && part.aparelho) apagar.push("b:" + part.aparelho);
+      await this.storage.delete(apagar);
     } else if (corpo.acao === "zerar") {
-      const chaves = [...(await this.storage.list({ prefix: "p:" })).keys()];
+      const chaves = [
+        ...(await this.storage.list({ prefix: "p:" })).keys(),
+        ...(await this.storage.list({ prefix: "b:" })).keys(),
+      ];
       for (let i = 0; i < chaves.length; i += 128) await this.storage.delete(chaves.slice(i, i + 128));
       await this.storage.delete("seq");
     }
@@ -176,7 +215,7 @@ export class Oraculo {
     return json({
       ativa: cfg.ativa,
       filiais,
-      participacoes: parts.map((p) => ({ ...p, chave: "p:" + p.filial + ":" + chaveNome(p.nome) })),
+      participacoes: parts.map((p) => publica(p, { chave: "p:" + p.filial + ":" + chaveNome(p.nome) })),
     });
   }
 }

@@ -471,10 +471,10 @@ select{width:100%;background:rgba(6,5,12,.7);color:var(--parch);border:1px solid
 
     <!-- cupom já gerado -->
     <section id="screen-already" class="frame" hidden>
-      <h2 class="head gold">Você já revelou o seu destino</h2>
-      <p class="speech">O oráculo não se repete. <em>O cupom desta participação já foi gerado neste aparelho.</em></p>
-      <p class="fineprint">Uma única participação por colaborador. Se você ainda não entregou o seu cupom, procure a imagem salva no seu aparelho.</p>
-      <div class="btn-row"><span class="btn-wrap ghost"><button class="btn ghost" id="btn-already-back" type="button">Voltar ao início</button></span></div>
+      <h2 class="head gold">Você já participou</h2>
+      <p class="speech">O oráculo não se repete. <span id="already-who"></span> o seu destino já foi revelado: <em id="already-result"></em>.</p>
+      <div class="btn-row"><span class="btn-wrap violet"><button class="btn violet" id="btn-already-coupon" type="button">Ver meu cupom</button></span></div>
+      <p class="fineprint">Uma única participação por aparelho. Se este aparelho é de outra pessoa e você ainda não participou, use o seu celular ou fale com a organização da campanha.</p>
     </section>
 
     <!-- encerrada -->
@@ -852,7 +852,11 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     if(d.encerrada)return{closed:true};
     if(d.esgotada)return{esgotada:true,filialNome:d.filialNome};
     return{result:d.resultado,couponCode:d.codigo,sequenceNumber:d.seq,createdAt:d.criadoEm,
-      nome:d.nome,filialNome:d.filialNome,repetida:!!d.repetida};
+      nome:d.nome,filialNome:d.filialNome,repetida:!!d.repetida,mesmoAparelho:!!d.mesmoAparelho};
+  }
+  async function myParticipation(){
+    var d=await api("/api/minha",{browserId:getBrowserId()});var p=d.participacao;
+    return p?{result:p.resultado,couponCode:p.codigo,sequenceNumber:p.seq,createdAt:p.criadoEm,nome:p.nome,filialNome:p.filialNome}:null;
   }
 
   /* ---------- fluxo ---------- */
@@ -889,13 +893,22 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
   }
 
   async function init(){
-    decorateFrames();startFX();startParallax();updateSoundBtn();show("loading");
-    // A página sempre recomeça do início: o espetáculo pode ser assistido quantas vezes se quiser.
-    // A participação (resultado e código) continua única por navegador; a revelação repete o mesmo destino.
-    var est;
-    try{est=await loadEstado();}catch(e){showError("Não consegui falar com o oráculo. Verifique a sua internet e tente novamente.");return;}
+    decorateFrames();startFX();startParallax();updateSoundBtn();start();
+  }
+  // Uma participação por aparelho: quem já participou volta direto para "Você já participou".
+  async function start(){
+    show("loading");
+    var est,mine;
+    try{est=await loadEstado();mine=await myParticipation();}catch(e){showError("Não consegui falar com o oráculo. Verifique a sua internet e tente novamente.");return;}
+    if(mine){showAlready(mine);return;}
     if(!est.ativa){show("closed");return;}
     fillFiliais();show("enter");
+  }
+  function showAlready(part){
+    current=part;stopVoice();
+    $("already-who").textContent=part.nome?part.nome.split(" ")[0]+",":"";
+    $("already-result").textContent=part.result;
+    show("already");
   }
   function showError(msg){var el=$("error-msg");if(el)el.textContent=msg||"Algo turvou a visão do oráculo. Tente novamente em instantes.";show("error");}
 
@@ -935,6 +948,7 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     try{part=await assignResult();}catch(e){errored=true;}
     if(errored){if(btn)btn.disabled=false;stopVoice();showError();return;}
     if(part&&part.closed){if(btn)btn.disabled=false;stopVoice();show("closed");return;}
+    if(part&&part.mesmoAparelho){if(btn)btn.disabled=false;showAlready(part);return;}
     if(part&&part.esgotada){if(btn)btn.disabled=false;stopVoice();$("esgotada-filial").textContent=part.filialNome||"sua filial";show("esgotada");return;}
     var wait=(prefersReduced()?400:1500)-(Date.now()-started);if(wait>0)await sleep(wait);
     if(card){card.classList.remove("rise");card.classList.add("suspense");}
@@ -1049,12 +1063,10 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
       cv.toBlob(function(b){couponBlob=b;resolve();},"image/png");
     });
   }
-  var couponThisSession=false;
+  var couponFrom="result";
   async function onGerarCupom(){
     if(!current)return;
-    var doneKey="oraculo_coupon_done_"+(current.couponCode||"");
-    if(!couponThisSession&&store(doneKey)==="1"){stopVoice();show("already");return;}
-    couponThisSession=true;store(doneKey,"1");
+    couponFrom=$("screen-already").hidden?"result":"already";
     show("coupon");$("coupon-img").removeAttribute("src");
     $("coupon-code-chip").textContent=current.couponCode||"";
     try{if(document.fonts){await Promise.all([document.fonts.load("92px 'Pirata One'"),document.fonts.load("600 24px 'Cinzel'"),document.fonts.load("italic 500 36px 'Cormorant Garamond'")]);await document.fonts.ready;}}catch(e){}
@@ -1167,9 +1179,9 @@ window.ORACULO_AUDIO={"f-doces":"//NkxAAAAANIAAAAAExBTUVVVVVMQUkBEA1Ijc4hRwN3d3P
     $("btn-reveal").addEventListener("click",onReveal);
     $("btn-coupon").addEventListener("click",onGerarCupom);
     $("btn-download").addEventListener("click",onDownload);
-    $("btn-back").addEventListener("click",function(){show("result");});
-    $("btn-already-back").addEventListener("click",function(){stopVoice();var b=$("btn-reveal");if(b)b.disabled=false;show("enter");});
-    $("btn-retry").addEventListener("click",function(){var b=$("btn-reveal");if(b)b.disabled=false;if(!FILIAIS.length)init();else onReveal();});
+    $("btn-back").addEventListener("click",function(){show(couponFrom);});
+    $("btn-already-coupon").addEventListener("click",onGerarCupom);
+    $("btn-retry").addEventListener("click",function(){var b=$("btn-reveal");if(b)b.disabled=false;if(!FILIAIS.length)start();else onReveal();});
     $("btn-esgotada-back").addEventListener("click",function(){stopVoice();show("enter");});
     $("ident-form").addEventListener("submit",onIdent);
     $("ident-overlay").addEventListener("click",function(e){if(e.target===this)this.hidden=true;});
